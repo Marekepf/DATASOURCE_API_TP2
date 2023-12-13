@@ -1,6 +1,9 @@
 import requests
 import os
 from kaggle.api.kaggle_api_extended import KaggleApi
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 def download_iris_dataset():
     api = KaggleApi()
@@ -9,14 +12,38 @@ def download_iris_dataset():
 
     return {"status": "Dataset downloaded successfully"}
 
-# def download_iris_dataset():
-#     dataset_url = "https://www.kaggle.com/datasets/uciml/iris"
-#     response = requests.get(dataset_url)
-    
-#     if response.status_code == 200:
-#         os.makedirs('src/data', exist_ok=True)
-#         with open('src/data/iris.csv', 'wb') as file:
-#             file.write(response.content)
-#         return {"status": "Dataset downloaded successfully"}
-#     else:
-#         return {"status": "Failed to download the dataset"}
+def load_iris_dataset():
+    file_path = 'src/data/iris.csv'
+    try:
+        df = pd.read_csv(file_path)
+        return df.to_dict(orient='records')  # Convert DataFrame to a list of dictionaries
+    except FileNotFoundError:
+        return {"error": "Dataset file not found."}
+
+
+def process_iris_dataset():
+    file_path = 'src/data/iris.csv'
+    try:
+        df = pd.read_csv(file_path)
+
+        # Example processing: Standardizing numeric features
+        scaler = StandardScaler()
+        numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+        df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+
+        return df.to_dict(orient='records')
+    except FileNotFoundError:
+        return {"error": "Dataset file not found."}
+
+
+def split_dataset(test_size=0.2):
+    file_path = 'src/data/iris.csv'
+    try:
+        df = pd.read_csv(file_path)
+        train_df, test_df = train_test_split(df, test_size=test_size)
+        return {
+            "train": train_df.to_dict(orient='records'),
+            "test": test_df.to_dict(orient='records')
+        }
+    except FileNotFoundError:
+        return {"error": "Dataset file not found."}
